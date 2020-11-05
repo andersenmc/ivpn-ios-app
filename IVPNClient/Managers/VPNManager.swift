@@ -170,6 +170,10 @@ class VPNManager {
         configuration.useExtendedAuthentication = true
         configuration.disconnectOnSleep = !UserDefaults.shared.keepAlive
         
+        if #available(iOS 14.0, *) {
+            configuration.includeAllNetworks = UserDefaults.shared.isKillSwitch
+        }
+        
         // Child IPSec security associations to be negotiated for each IKEv2 policy
         configuration.childSecurityAssociationParameters.encryptionAlgorithm = .algorithmAES256 // AES_CBC_256
         configuration.childSecurityAssociationParameters.diffieHellmanGroup = .group14 // MODP_2048
