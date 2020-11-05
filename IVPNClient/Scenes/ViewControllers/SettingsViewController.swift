@@ -43,6 +43,7 @@ class SettingsViewController: UITableViewController {
     @IBOutlet weak var loggingSwitch: UISwitch!
     @IBOutlet weak var loggingCrashesSwitch: UISwitch!
     @IBOutlet weak var loggingCell: UITableViewCell!
+    @IBOutlet weak var killSwitch: UISwitch!
     
     // MARK: - Properties -
     
@@ -168,6 +169,22 @@ class SettingsViewController: UITableViewController {
         }
     }
     
+    @IBAction func toggleKillSwitch(_ sender: UISwitch) {
+        if Application.shared.connectionManager.status == .connected {
+            showActionSheet(title: "To change the Kill Switch setting, VPN must be reconnected.", actions: ["Reconnect now"], sourceView: view) { index in
+                switch index {
+                case 0:
+                    UserDefaults.shared.setValue(sender.isOn, forKey: UserDefaults.Key.isKillSwitch)
+                    Application.shared.connectionManager.reconnect()
+                default:
+                    sender.setOn(UserDefaults.shared.isKillSwitch, animated: true)
+                }
+            }
+        } else {
+            UserDefaults.shared.setValue(sender.isOn, forKey: UserDefaults.Key.isKillSwitch)
+        }
+    }
+    
     // MARK: - View Lifecycle -
     
     override func viewDidLoad() {
@@ -201,21 +218,11 @@ class SettingsViewController: UITableViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if UserDefaults.shared.isMultiHop {
-            multiHopSwitch.setOn(true, animated: false)
-        }
-        
-        if !UserDefaults.shared.keepAlive {
-            keepAliveSwitch.setOn(false, animated: false)
-        }
-        
-        if !UserDefaults.shared.isLoggingCrashes {
-            loggingCrashesSwitch.setOn(false, animated: false)
-        }
-        
-        if UserDefaults.shared.isLogging {
-            loggingSwitch.setOn(true, animated: false)
-        }
+        multiHopSwitch.setOn(UserDefaults.shared.isMultiHop, animated: false)
+        keepAliveSwitch.setOn(UserDefaults.shared.keepAlive, animated: false)
+        loggingCrashesSwitch.setOn(UserDefaults.shared.isLoggingCrashes, animated: false)
+        loggingSwitch.setOn(UserDefaults.shared.isLogging, animated: false)
+        killSwitch.setOn(UserDefaults.shared.isKillSwitch, animated: false)
         
         updateCellInset(cell: entryServerCell, inset: UserDefaults.shared.isMultiHop)
         updateCellInset(cell: loggingCell, inset: UserDefaults.shared.isLogging)

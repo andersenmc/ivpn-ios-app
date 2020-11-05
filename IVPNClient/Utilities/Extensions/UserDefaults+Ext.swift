@@ -60,6 +60,7 @@ extension UserDefaults {
         static let connectionIpAddress = "connectionIpAddress"
         static let keepAlive = "keepAlive"
         static let serversSort = "serversSort"
+        static let isKillSwitch = "isKillSwitch"
     }
     
     @objc dynamic var wireguardTunnelProviderError: String {
@@ -174,6 +175,10 @@ extension UserDefaults {
         return string(forKey: Key.serversSort) ?? ""
     }
     
+    @objc dynamic var isKillSwitch: Bool {
+        return bool(forKey: Key.isKillSwitch)
+    }
+    
     static func registerUserDefaults() {
         shared.register(defaults: [UserDefaults.Key.networkProtectionUntrustedConnect: true])
         shared.register(defaults: [UserDefaults.Key.networkProtectionTrustedDisconnect: true])
@@ -201,6 +206,7 @@ extension UserDefaults {
         shared.removeObject(forKey: UserDefaults.Key.apiHostName)
         shared.removeObject(forKey: UserDefaults.Key.sessionsLimit)
         shared.removeObject(forKey: UserDefaults.Key.keepAlive)
+        shared.removeObject(forKey: UserDefaults.Key.isKillSwitch)
         standard.removeObject(forKey: "SelectedServerFastest")
         standard.removeObject(forKey: "FastestServerConfiguredForOpenVPN")
         standard.removeObject(forKey: "FastestServerConfiguredForWireGuard")
