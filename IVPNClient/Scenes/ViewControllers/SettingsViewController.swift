@@ -114,17 +114,6 @@ class SettingsViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    @IBAction func toggleKeepAlive(_ sender: UISwitch) {
-        if !Application.shared.connectionManager.status.isDisconnected() {
-            showConnectedAlert(message: "To change Keep alive on sleep settings, please first disconnect", sender: sender, completion: {
-                sender.setOn(UserDefaults.shared.keepAlive, animated: true)
-            })
-            return
-        }
-        
-        UserDefaults.shared.set(sender.isOn, forKey: UserDefaults.Key.keepAlive)
-    }
-    
     @IBAction func toggleLogging(_ sender: UISwitch) {
         FileSystemManager.resetLogFile(name: Config.openVPNLogFile)
         UserDefaults.shared.set(sender.isOn, forKey: UserDefaults.Key.isLogging)
@@ -170,8 +159,8 @@ class SettingsViewController: UITableViewController {
     }
     
     @IBAction func toggleKillSwitch(_ sender: UISwitch) {
-        if Application.shared.connectionManager.status == .connected {
-            showActionSheet(title: "To change the Kill Switch setting, VPN must be reconnected.", actions: ["Reconnect now"], sourceView: view) { index in
+        if !Application.shared.connectionManager.status.isDisconnected() {
+            showActionSheet(title: "To change Kill Switch settings, VPN must be reconnected", actions: ["Reconnect now"], sourceView: view) { index in
                 switch index {
                 case 0:
                     UserDefaults.shared.setValue(sender.isOn, forKey: UserDefaults.Key.isKillSwitch)
@@ -182,6 +171,22 @@ class SettingsViewController: UITableViewController {
             }
         } else {
             UserDefaults.shared.setValue(sender.isOn, forKey: UserDefaults.Key.isKillSwitch)
+        }
+    }
+    
+    @IBAction func toggleKeepAlive(_ sender: UISwitch) {
+        if !Application.shared.connectionManager.status.isDisconnected() {
+            showActionSheet(title: "To change Keep alive on sleep settings, VPN must be reconnected", actions: ["Reconnect now"], sourceView: view) { index in
+                switch index {
+                case 0:
+                    UserDefaults.shared.set(sender.isOn, forKey: UserDefaults.Key.keepAlive)
+                    Application.shared.connectionManager.reconnect()
+                default:
+                    sender.setOn(UserDefaults.shared.keepAlive, animated: true)
+                }
+            }
+        } else {
+            UserDefaults.shared.set(sender.isOn, forKey: UserDefaults.Key.keepAlive)
         }
     }
     
@@ -440,8 +445,8 @@ extension SettingsViewController {
         if indexPath.section == 0 && indexPath.row == 2 && !multiHopSwitch.isOn { return 0 }
         if indexPath.section == 2 && indexPath.row == 1 { return 60 }
         if indexPath.section == 2 && indexPath.row == 2 { return 60 }
-        if indexPath.section == 2 && indexPath.row == 5 { return 60 }
-        if indexPath.section == 2 && indexPath.row == 6 && !loggingSwitch.isOn { return 0 }
+        if indexPath.section == 2 && indexPath.row == 6 { return 60 }
+        if indexPath.section == 2 && indexPath.row == 7 && !loggingSwitch.isOn { return 0 }
         
         if #available(iOS 14.0, *) {} else {
             if indexPath.section == 2 && indexPath.row == 3 { return 0 }
