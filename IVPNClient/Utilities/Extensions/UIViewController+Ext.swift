@@ -255,8 +255,7 @@ extension UIViewController {
     
     func evaluateIsOpenVPN() -> Bool {
         if Application.shared.settings.connectionProtocol.tunnelType() != .openvpn {
-            showAlert(title: "Change protocol to OpenVPN", message: "For Multi-Hop connection you must select OpenVPN protocol.") { _ in
-            }
+            showAlert(title: "Change protocol to OpenVPN", message: "For Multi-Hop connection you must select OpenVPN protocol.")
             return false
         }
         

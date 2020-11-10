@@ -61,24 +61,20 @@ class SettingsViewController: UITableViewController {
     
     @IBAction func toggleMultiHop(_ sender: UISwitch) {
         guard evaluateIsLoggedIn() else {
-            DispatchQueue.delay(0.5) {
+            DispatchQueue.delay(0.75) {
                 sender.setOn(false, animated: true)
             }
             return
         }
         
         guard evaluateIsServiceActive() else {
-            DispatchQueue.delay(0.5) {
+            DispatchQueue.delay(0.75) {
                 sender.setOn(false, animated: true)
             }
             return
         }
         
-        guard evaluateMultiHopCapability(sender) else {
-            DispatchQueue.delay(0.5) {
-                sender.setOn(false, animated: true)
-            }
-            
+        guard Application.shared.serviceStatus.isEnabled(capability: .multihop) else {
             showActionSheet(title: "MultiHop is supported only on IVPN Pro plan", actions: ["Switch plan"], sourceView: sender) { index in
                 switch index {
                 case 0:
@@ -93,8 +89,8 @@ class SettingsViewController: UITableViewController {
             return
         }
         
-        guard evaluateIsOpenVPN() else {
-            DispatchQueue.delay(0.5) {
+        guard Application.shared.settings.connectionProtocol.tunnelType() == .openvpn else {
+            showAlert(title: "Change protocol to OpenVPN", message: "For Multi-Hop connection you must select OpenVPN protocol.") { _ in
                 sender.setOn(false, animated: true)
             }
             return
@@ -159,6 +155,13 @@ class SettingsViewController: UITableViewController {
     }
     
     @IBAction func toggleKillSwitch(_ sender: UISwitch) {
+        if sender.isOn && Application.shared.settings.connectionProtocol.tunnelType() == .ipsec {
+            showAlert(title: "IKEv2 not supported", message: "Kill Switch is supported only for OpenVPN and WireGuard protocols.") { _ in
+                sender.setOn(false, animated: true)
+            }
+            return
+        }
+        
         if !Application.shared.connectionManager.status.isDisconnected() {
             showActionSheet(title: "To change Kill Switch settings, VPN must be reconnected", actions: ["Reconnect now"], sourceView: view) { index in
                 switch index {
