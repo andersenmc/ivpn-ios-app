@@ -73,6 +73,11 @@ class ProtocolViewController: UITableViewController {
         return true
     }
     
+    func validateKillSwitch(connectionProtocol: ConnectionSettings) -> Bool {
+        if UserDefaults.shared.isKillSwitch && connectionProtocol.tunnelType() == .ipsec { return false }
+        return true
+    }
+    
     func validateCustomDNSAndAntiTracker(connectionProtocol: ConnectionSettings) -> Bool {
         if UserDefaults.shared.isCustomDNS && UserDefaults.shared.isAntiTracker && connectionProtocol == .ipsec { return false }
         return true
@@ -137,7 +142,7 @@ extension ProtocolViewController {
         
         cell.setup(connectionProtocol: connectionProtocol, isSettings: indexPath.section > 0)
         
-        if !validateMultiHop(connectionProtocol: connectionProtocol) || !validateCustomDNS(connectionProtocol: connectionProtocol) || !validateAntiTracker(connectionProtocol: connectionProtocol) {
+        if !validateMultiHop(connectionProtocol: connectionProtocol) || !validateCustomDNS(connectionProtocol: connectionProtocol) || !validateAntiTracker(connectionProtocol: connectionProtocol) || !validateKillSwitch(connectionProtocol: connectionProtocol) {
             cell.protocolLabel.textColor = UIColor.init(named: Theme.ivpnLabel6)
         } else {
             cell.protocolLabel.textColor = UIColor.init(named: Theme.ivpnLabelPrimary)
@@ -255,6 +260,23 @@ extension ProtocolViewController {
                     switch index {
                     case 0:
                         UserDefaults.shared.set(false, forKey: UserDefaults.Key.isCustomDNS)
+                        tableView.reloadData()
+                    default:
+                        break
+                    }
+                }
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+            
+            return
+        }
+        
+        guard validateKillSwitch(connectionProtocol: connectionProtocol) else {
+            if let cell = tableView.cellForRow(at: indexPath) {
+                showActionSheet(title: "To use IKEv2 protocol you must turn Kill Switch off", actions: ["Turn off"], sourceView: cell as UIView) { index in
+                    switch index {
+                    case 0:
+                        UserDefaults.shared.set(false, forKey: UserDefaults.Key.isKillSwitch)
                         tableView.reloadData()
                     default:
                         break
