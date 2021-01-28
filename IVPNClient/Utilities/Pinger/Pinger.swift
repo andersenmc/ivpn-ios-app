@@ -67,8 +67,7 @@ class Pinger {
                     self.count -= 1
                     
                     if self.count <= 0 {
-                        NotificationCenter.default.post(name: Notification.Name.PingDidComplete, object: nil)
-                        log(info: "Pinger service finished")
+                        self.complete()
                     }
                     
                     dispatchGroup.leave()
@@ -79,6 +78,12 @@ class Pinger {
         }
 
         log(info: "Pinger service started")
+        
+        DispatchQueue.delay(3) {
+            if self.count > 0 {
+                self.complete()
+            }
+        }
     }
     
     // MARK: - Private methods -
@@ -106,6 +111,14 @@ class Pinger {
         
         if server == Application.shared.settings.selectedExitServer {
             Application.shared.settings.selectedExitServer = server
+        }
+    }
+    
+    private func complete() {
+        count = 0
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: Notification.Name.PingDidComplete, object: nil)
+            log(info: "Pinger service finished")
         }
     }
     
