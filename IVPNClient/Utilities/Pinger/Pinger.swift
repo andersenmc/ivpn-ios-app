@@ -47,13 +47,51 @@ class Pinger {
         
         UserDefaults.shared.set(Date().timeIntervalSince1970, forKey: "LastPingTimestamp")
         
+        let group = DispatchGroup()
+        count = serverList.servers.count
+        
         for server in serverList.servers {
             if let ipAddress = server.ipAddresses.first {
                 guard !ipAddress.isEmpty else {
                     continue
                 }
                 
-                // TODO: Set up latency check for ipAddress
+                group.enter()
+                let once = try? SwiftyPing(host: ipAddress, configuration: PingConfiguration(interval: 0.5, with: 5), queue: DispatchQueue.global())
+                once?.observer = { response in
+                    
+                    if let server = self.serverList.getServer(byIpAddress: response.ipAddress ?? "") {
+                        if response.ipHeader != nil {
+                            if let duration = response.duration {
+                                server.pingMs = Int(duration * 1000)
+                                
+                                let isFastest = Application.shared.settings.selectedServer.fastest
+                                
+                                if server == Application.shared.settings.selectedServer {
+                                    Application.shared.settings.selectedServer = server
+                                    Application.shared.settings.selectedServer.fastest = isFastest
+                                }
+                                
+                                if server == Application.shared.settings.selectedExitServer {
+                                    Application.shared.settings.selectedExitServer = server
+                                }
+                            }
+                            
+                            once?.haltPinging()
+                        }
+                    }
+                    
+                    self.count -= 1
+                    
+                    if self.count <= 0 {
+                        NotificationCenter.default.post(name: Notification.Name.PingDidComplete, object: nil)
+                        log(info: "Pinger service finished")
+                    }
+                    
+                    group.leave()
+                }
+                once?.targetCount = 1
+                try? once?.startPinging()
             }
         }
 
