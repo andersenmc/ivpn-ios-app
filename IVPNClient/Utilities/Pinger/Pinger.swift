@@ -47,7 +47,7 @@ class Pinger {
         
         UserDefaults.shared.set(Date().timeIntervalSince1970, forKey: "LastPingTimestamp")
         
-        let group = DispatchGroup()
+        let dispatchGroup = DispatchGroup()
         count = serverList.servers.count
         
         for server in serverList.servers {
@@ -56,29 +56,12 @@ class Pinger {
                     continue
                 }
                 
-                group.enter()
-                let once = try? SwiftyPing(host: ipAddress, configuration: PingConfiguration(interval: 0.5, with: 5), queue: DispatchQueue.global())
-                once?.observer = { response in
-                    
-                    if let server = self.serverList.getServer(byIpAddress: response.ipAddress ?? "") {
-                        if response.ipHeader != nil {
-                            if let duration = response.duration {
-                                server.pingMs = Int(duration * 1000)
-                                
-                                let isFastest = Application.shared.settings.selectedServer.fastest
-                                
-                                if server == Application.shared.settings.selectedServer {
-                                    Application.shared.settings.selectedServer = server
-                                    Application.shared.settings.selectedServer.fastest = isFastest
-                                }
-                                
-                                if server == Application.shared.settings.selectedExitServer {
-                                    Application.shared.settings.selectedExitServer = server
-                                }
-                            }
-                            
-                            once?.haltPinging()
-                        }
+                dispatchGroup.enter()
+                let pingOnce = try? SwiftyPing(host: ipAddress, configuration: PingConfiguration(interval: 0.5, with: 5), queue: DispatchQueue.global())
+                pingOnce?.observer = { response in
+                    if response.ipHeader != nil {
+                        self.updateServer(ping: response)
+                        pingOnce?.haltPinging()
                     }
                     
                     self.count -= 1
@@ -88,10 +71,10 @@ class Pinger {
                         log(info: "Pinger service finished")
                     }
                     
-                    group.leave()
+                    dispatchGroup.leave()
                 }
-                once?.targetCount = 1
-                try? once?.startPinging()
+                pingOnce?.targetCount = 1
+                try? pingOnce?.startPinging()
             }
         }
 
@@ -105,6 +88,25 @@ class Pinger {
         let isPingTimeoutPassed = Date().timeIntervalSince1970 > Double(lastPingTimestamp) + Config.minPingCheckInterval
         
         return Application.shared.connectionManager.status.isDisconnected() && isPingTimeoutPassed
+    }
+    
+    private func updateServer(ping: PingResponse) {
+        guard let ipAddress = ping.ipAddress, let duration = ping.duration, let server = self.serverList.getServer(byIpAddress: ipAddress) else {
+            return
+        }
+        
+        server.pingMs = Int(duration * 1000)
+        
+        let isFastest = Application.shared.settings.selectedServer.fastest
+        
+        if server == Application.shared.settings.selectedServer {
+            Application.shared.settings.selectedServer = server
+            Application.shared.settings.selectedServer.fastest = isFastest
+        }
+        
+        if server == Application.shared.settings.selectedExitServer {
+            Application.shared.settings.selectedExitServer = server
+        }
     }
     
 }
