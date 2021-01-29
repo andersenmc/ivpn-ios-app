@@ -45,6 +45,8 @@ class Pinger {
             return
         }
         
+        log(info: "Pinger service started")
+        
         UserDefaults.shared.set(Date().timeIntervalSince1970, forKey: "LastPingTimestamp")
         
         let dispatchGroup = DispatchGroup()
@@ -74,14 +76,6 @@ class Pinger {
                 }
                 pingOnce?.targetCount = 1
                 try? pingOnce?.startPinging()
-            }
-        }
-
-        log(info: "Pinger service started")
-        
-        DispatchQueue.delay(3) {
-            if self.count > 0 {
-                self.complete()
             }
         }
     }
