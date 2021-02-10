@@ -263,14 +263,7 @@ extension APIClient: URLSessionDelegate {
             return
         }
         
-        // Certificate public key validation
-        let publicKeyPin = APIPublicKeyPin()
-        if publicKeyPin.validate(serverTrust: trust, domain: nil) {
-            completionHandler(.useCredential, URLCredential(trust: trust))
-            return
-        }
-        
-        completionHandler(.cancelAuthenticationChallenge, nil)
+        completionHandler(.useCredential, URLCredential(trust: trust))
     }
     
     private func validateHostName(of challenge: URLAuthenticationChallenge, tlsHostName: String) -> Bool {
