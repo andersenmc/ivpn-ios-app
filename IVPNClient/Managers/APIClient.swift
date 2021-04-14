@@ -51,11 +51,13 @@ class APIRequest {
     var headers: [HTTPHeader]?
     var body: Data?
     var contentType: HTTPContentType
+    var addressType: AddressType?
     
-    init(method: HTTPMethod, path: String, contentType: HTTPContentType = .applicationJSON) {
+    init(method: HTTPMethod, path: String, contentType: HTTPContentType = .applicationJSON, addressType: AddressType? = nil) {
         self.method = method
         self.path = path
         self.contentType = contentType
+        self.addressType = addressType
     }
 }
 
@@ -119,9 +121,20 @@ class APIClient: NSObject {
     // MARK: - Methods -
     
     func perform(_ request: APIRequest, _ completion: @escaping APIClientCompletion) {
+        if let addressType = request.addressType {
+            switch addressType {
+            case .IPv4:
+                hostName = APIAccessManager.shared.ipv4HostName
+            case .IPv6:
+                hostName = APIAccessManager.shared.ipv6HostName
+            default:
+                break
+            }
+        }
+        
         var urlComponents = URLComponents()
         urlComponents.scheme = baseURL.scheme
-        urlComponents.host = baseURL.host
+        urlComponents.host = hostName
         urlComponents.path = baseURL.path
         urlComponents.queryItems = request.queryItems
         
@@ -172,7 +185,7 @@ class APIClient: NSObject {
         
         let task = session.dataTask(with: urlRequest) { data, response, _ in
             guard let httpResponse = response as? HTTPURLResponse else {
-                if let nextHost = APIAccessManager.shared.nextHostName(failedHostName: self.hostName) {
+                if let nextHost = APIAccessManager.shared.nextHostName(failedHostName: self.hostName), request.addressType == nil {
                     self.retry(request, nextHost: nextHost) { result in
                         completion(result)
                     }

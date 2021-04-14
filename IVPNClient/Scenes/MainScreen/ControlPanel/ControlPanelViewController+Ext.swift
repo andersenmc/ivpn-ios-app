@@ -35,7 +35,7 @@ extension ControlPanelViewController {
         if indexPath.row == 3 && !UserDefaults.shared.isMultiHop { return 0 }
         if indexPath.row == 4 { return 52 }
         if indexPath.row == 6 && !UserDefaults.shared.networkProtectionEnabled { return 0 }
-        if indexPath.row == 8 { return 236 }
+        if indexPath.row == 8 { return 260 }
         if indexPath.row == 9 { return 0 }
 
         return 85
@@ -83,21 +83,16 @@ extension ControlPanelViewController {
                 return
             }
             
-            guard Application.shared.connectionManager.status.isDisconnected() else {
-                showConnectedAlert(message: "To change protocol, please first disconnect", sender: controlPanelView.protocolLabel)
-                return
-            }
-            
-            Application.shared.connectionManager.isOnDemandEnabled { enabled in
-                guard !enabled else {
-                    self.showDisableVPNPrompt(sourceView: self.controlPanelView.protocolLabel) {
-                        self.disconnect()
-                        self.presentSelectProtocol()
+            Application.shared.connectionManager.isOnDemandEnabled { [self] enabled in
+                if enabled, Application.shared.connectionManager.status.isDisconnected() {
+                    showDisableVPNPrompt(sourceView: controlPanelView.protocolLabel) {
+                        disconnect()
+                        presentSelectProtocol()
                     }
                     return
                 }
                 
-                self.presentSelectProtocol()
+                presentSelectProtocol()
             }
         }
     }
