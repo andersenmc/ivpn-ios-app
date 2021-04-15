@@ -44,6 +44,7 @@ class SettingsViewController: UITableViewController {
     @IBOutlet weak var loggingCell: UITableViewCell!
     @IBOutlet weak var ipv6Switch: UISwitch!
     @IBOutlet weak var showIPv4ServersSwitch: UISwitch!
+    @IBOutlet weak var askToReconnectSwitch: UISwitch!
     
     // MARK: - Properties -
     
@@ -130,6 +131,10 @@ class SettingsViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    @IBAction func toggleAskToReconnect(_ sender: UISwitch) {
+        UserDefaults.shared.set(!sender.isOn, forKey: UserDefaults.Key.notAskToReconnect)
+    }
+    
     @IBAction func extendSubscription(_ sender: Any) {
         present(NavigationManager.getSubscriptionViewController(), animated: true, completion: nil)
     }
@@ -196,6 +201,7 @@ class SettingsViewController: UITableViewController {
         showIPv4ServersSwitch.isEnabled = UserDefaults.shared.isIPv6
         keepAliveSwitch.setOn(UserDefaults.shared.keepAlive, animated: false)
         loggingSwitch.setOn(UserDefaults.shared.isLogging, animated: false)
+        askToReconnectSwitch.setOn(!UserDefaults.shared.notAskToReconnect, animated: false)
         
         updateCellInset(cell: entryServerCell, inset: UserDefaults.shared.isMultiHop)
         updateCellInset(cell: loggingCell, inset: UserDefaults.shared.isLogging)
@@ -367,8 +373,8 @@ extension SettingsViewController {
         if indexPath.section == 0 && indexPath.row == 0 { return 60 }
         if indexPath.section == 0 && indexPath.row == 2 && !multiHopSwitch.isOn { return 0 }
         if indexPath.section == 3 && indexPath.row == 1 { return 60 }
-        if indexPath.section == 3 && indexPath.row == 5 { return 60 }
-        if indexPath.section == 3 && indexPath.row == 6 && !loggingSwitch.isOn { return 0 }
+        if indexPath.section == 3 && indexPath.row == 6 { return 60 }
+        if indexPath.section == 3 && indexPath.row == 7 && !loggingSwitch.isOn { return 0 }
         
         if indexPath.section == 3 && indexPath.row == 3 {
             if #available(iOS 14.0, *) {
