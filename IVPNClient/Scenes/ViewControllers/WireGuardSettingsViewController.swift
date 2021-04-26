@@ -196,6 +196,7 @@ extension WireGuardSettingsViewController {
         hud.dismiss()
         showAlert(title: "Failed to regenerate WireGuard keys", message: "There was a problem regenerating and uploading WireGuard keys to IVPN server.")
         setupView()
+        Application.shared.connectionManager.removeOnDemandRules {}
     }
     
 }
