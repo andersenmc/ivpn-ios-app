@@ -93,15 +93,6 @@ class WireGuardSettingsViewController: UITableViewController {
     private func setupView() {
         ipAddressLabel.text = KeyChain.wgIpAddress
         publicKeyLabel.text = KeyChain.wgPublicKey
-        
-        guard KeyChain.wgPublicKey != nil else {
-            keyTimestampLabel.text = ""
-            keyExpirationTimestampLabel.text = ""
-            keyRegenerationTimestampLabel.text = ""
-            
-            return
-        }
-        
         keyTimestampLabel.text = AppKeyManager.keyTimestamp.formatDate()
         keyExpirationTimestampLabel.text = AppKeyManager.keyExpirationTimestamp.formatDate()
         keyRegenerationTimestampLabel.text = AppKeyManager.keyRegenerationTimestamp.formatDate()
